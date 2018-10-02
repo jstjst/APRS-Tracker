@@ -1,0 +1,6 @@
+[submodule "LibAPRS"]
+	path = LibAPRS
+	url = https://github.com/markqvist/LibAPRS
+[submodule "library/LibAPRS"]
+	path = library/LibAPRS
+	url = https://github.com/markqvist/LibAPRS
