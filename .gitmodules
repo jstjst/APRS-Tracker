@@ -7,3 +7,6 @@
 [submodule "library/TinyGPS"]
 	path = library/TinyGPS
 	url = https://github.com/mikalhart/TinyGPS
+[submodule "library/MLP"]
+	path = library/MLP
+	url = https://github.com/Megunolink/MLP
