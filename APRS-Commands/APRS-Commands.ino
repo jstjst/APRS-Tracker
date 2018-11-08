@@ -27,25 +27,6 @@ struct APRS_Settings {
   int Directivity;
 };
 
-/*
-char* tmp_Call;
-int tmp_SSID;
-char tmp_DestCall;
-int tmp_DestSSID;
-char tmp_Path1Call;
-int tmp_Path1SSID;
-char tmp_Path2Call;
-int tmp_Path2SSID;
-unsigned long tmp_Preamble;
-unsigned long tmp_Tail;
-bool tmp_AltSymTable;
-char tmp_Sym;
-int tmp_Power;
-int tmp_Height;
-int tmp_Gain;
-int tmp_Directivity;
-*/
-
 const APRS_Settings aprsDefaultSettings = {
   "NOCALL",
   0,
@@ -77,7 +58,7 @@ void setup()
   Serial.begin(4800);
 
   SerialCommandHandler.AddCommand(F("SetCall"), Cmd_SetCall);
-  /*SerialCommandHandler.AddCommand(F("SetDest"), Cmd_SetDest);
+  SerialCommandHandler.AddCommand(F("SetDest"), Cmd_SetDest);
   SerialCommandHandler.AddCommand(F("SetPath1"), Cmd_SetPath1);
   SerialCommandHandler.AddCommand(F("SetPath2"), Cmd_SetPath2);
   SerialCommandHandler.AddCommand(F("SetPreamble"), Cmd_SetPreamble);
@@ -85,13 +66,13 @@ void setup()
   SerialCommandHandler.AddCommand(F("SetSymTable"), Cmd_SetSymTable);
   SerialCommandHandler.AddCommand(F("SetSym"), Cmd_SetSym);
   SerialCommandHandler.AddCommand(F("SetPHG"), Cmd_SetPHG);
-*/
+
   SerialCommandHandler.AddCommand(F("SaveSet"), Cmd_SaveSet);
   SerialCommandHandler.AddCommand(F("LoadSet"), Cmd_LoadSet);
   SerialCommandHandler.AddCommand(F("ApplySet"), Cmd_ApplySet);
-  SerialCommandHandler.AddCommand(F("PrintSet"), Cmd_PrintSet);/*
+  SerialCommandHandler.AddCommand(F("PrintSet"), Cmd_PrintSet);
   SerialCommandHandler.AddCommand(F("StartupSet"), Cmd_StartupSet);
-  SerialCommandHandler.AddCommand(F("DefaultSet"), Cmd_DefaultSet);*/
+  SerialCommandHandler.AddCommand(F("DefaultSet"), Cmd_DefaultSet);
   SerialCommandHandler.AddCommand(F("Help"), Cmd_Help);
   SerialCommandHandler.SetDefaultHandler(Cmd_Unknown);
 
@@ -163,51 +144,53 @@ void Cmd_SetCall(CommandParameter &parameters)
   aprsSettings.SSID = parameters.NextParameterAsInteger(0);
 }
 
-/*
 void Cmd_SetDest(CommandParameter &parameters)
 {
-  tmp_DestCall = parameters.NextParameter();
-  tmp_DestSSID = parameters.NextParameterAsInteger(0);
+  char *tmp = parameters.NextParameter();
+  strlcpy(aprsSettings.DestCall, tmp, 6+1);
+  aprsSettings.DestSSID = parameters.NextParameterAsInteger(0);
 }
 
 void Cmd_SetPath1(CommandParameter &parameters)
 {
-  tmp_Path1Call = parameters.NextParameter();
-  tmp_Path1SSID = parameters.NextParameterAsInteger();
+  char *tmp = parameters.NextParameter();
+  strlcpy(aprsSettings.Path1Call, tmp, 6+1);
+  aprsSettings.Path1SSID = parameters.NextParameterAsInteger();
 }
 
 void Cmd_SetPath2(CommandParameter &parameters)
 {
-  tmp_Path2Call = parameters.NextParameter();
-  tmp_Path2SSID = parameters.NextParameterAsInteger();
+  char *tmp = parameters.NextParameter();
+  strlcpy(aprsSettings.Path2Call, tmp, 6+1);
+  aprsSettings.Path2SSID = parameters.NextParameterAsInteger();
 }
 
 void Cmd_SetPreamble(CommandParameter &parameters)
 {
-  tmp_Preamble = parameters.NextParameterAsUnsignedLong();
+  aprsSettings.Preamble = parameters.NextParameterAsUnsignedLong();
 }
 
 void Cmd_SetTail(CommandParameter &parameters)
 {
-  tmp_Tail = parameters.NextParameterAsUnsignedLong();
+  aprsSettings.Tail = parameters.NextParameterAsUnsignedLong();
 }
 
 void Cmd_SetSymTable(CommandParameter &parameters)
 {
-  char *parameter = parameters.NextParameter();
+  char *tmp = parameters.NextParameter();
 
-  if(strcmp(parameter, "Alternate") == 0)
+  if(strcmp(tmp, "Alternate") == 0)
   {
-    tmp_AltSymTable = true;
+    aprsSettings.AltSymTable = true;
   }
-  else if(strcmp(parameter, "Normal") == 0)
+  else if(strcmp(tmp, "Normal") == 0)
   {
-    tmp_AltSymTable = false;
+    aprsSettings.AltSymTable = false;
   }
   else
   {
     Serial.print(F("SetSymTable: invalid argument"));
-    Serial.println(parameter);
+    Serial.println(tmp);
     Serial.println(F("Valid arguments are:"));
     Serial.println(F("  - 'Normal'"));
     Serial.println(F("  - 'Alternate'"));
@@ -217,17 +200,17 @@ void Cmd_SetSymTable(CommandParameter &parameters)
 
 void Cmd_SetSym(CommandParameter &parameters)
 {
-  tmp_Sym = parameters.NextParameter();
+  aprsSettings.Sym = parameters.NextParameter();   //or use also strlcpy???
 }
 
 void Cmd_SetPHG(CommandParameter &parameters)
 {
-  tmp_Power = parameters.NextParameterAsInteger();
-  tmp_Height = parameters.NextParameterAsInteger();
-  tmp_Gain = parameters.NextParameterAsInteger();
-  tmp_Directivity = parameters.NextParameterAsInteger();
+  aprsSettings.Power = parameters.NextParameterAsInteger();
+  aprsSettings.Height = parameters.NextParameterAsInteger();
+  aprsSettings.Gain = parameters.NextParameterAsInteger();
+  aprsSettings.Directivity = parameters.NextParameterAsInteger();
 }
-*/
+
 void Cmd_SaveSet(CommandParameter &parameters)
 {
   EEPROM.put(eeAddress, aprsSettings);
@@ -251,23 +234,23 @@ void Cmd_PrintSet(CommandParameter &parameters)
 {
   APRS_printSettings();
 }
-/*
+
 void Cmd_StartupSet(CommandParameter &parameters)
 {
-  char *parameter = parameters.NextParameter();
+  char *tmp = parameters.NextParameter();
 
-  if(strcmp(parameter, "EEPROM") == 0)
+  if(strcmp(tmp, "EEPROM") == 0)
   {
     loadEEPROMSettings = true;
   }
-  else if(strcmp(parameter, "Default") == 0)
+  else if(strcmp(tmp, "Default") == 0)
   {
     loadEEPROMSettings = false;
   }
   else
   {
     Serial.print(F("StartupSet: invalid argument"));
-    Serial.println(parameter);
+    Serial.println(tmp);
     Serial.println(F("Valid arguments are:"));
     Serial.println(F("  - 'EEPROM'"));
     Serial.println(F("  - 'Default'"));
@@ -281,7 +264,7 @@ void Cmd_DefaultSet(CommandParameter &parameters)
   ApplySet();
   Serial.println(F("Loaded APRS default Settings"));
 }
-*/
+
 void Cmd_Help(CommandParameter &parameters)
 {
   Serial.println(F("Usage: $[Command]"));
