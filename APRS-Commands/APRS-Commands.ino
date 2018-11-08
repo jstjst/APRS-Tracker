@@ -6,16 +6,16 @@
 #define OPEN_SQUELCH false
 
 #define eeAddress 0
-bool loadEEPROMSettings = true;
+bool loadEEPROMSettings = false;
 
 struct APRS_Settings {
-  char Call;
+  char Call[6+1];
   int SSID;
-  char DestCall;
+  char DestCall[6+1];
   int DestSSID;
-  char Path1Call;
+  char Path1Call[6+1];
   int Path1SSID;
-  char Path2Call;
+  char Path2Call[6+1];
   int Path2SSID;
   unsigned long Preamble;
   unsigned long Tail;
@@ -27,6 +27,7 @@ struct APRS_Settings {
   int Directivity;
 };
 
+/*
 char* tmp_Call;
 int tmp_SSID;
 char tmp_DestCall;
@@ -43,6 +44,7 @@ int tmp_Power;
 int tmp_Height;
 int tmp_Gain;
 int tmp_Directivity;
+*/
 
 const APRS_Settings aprsDefaultSettings = {
   "NOCALL",
@@ -75,7 +77,7 @@ void setup()
   Serial.begin(4800);
 
   SerialCommandHandler.AddCommand(F("SetCall"), Cmd_SetCall);
-  SerialCommandHandler.AddCommand(F("SetDest"), Cmd_SetDest);
+  /*SerialCommandHandler.AddCommand(F("SetDest"), Cmd_SetDest);
   SerialCommandHandler.AddCommand(F("SetPath1"), Cmd_SetPath1);
   SerialCommandHandler.AddCommand(F("SetPath2"), Cmd_SetPath2);
   SerialCommandHandler.AddCommand(F("SetPreamble"), Cmd_SetPreamble);
@@ -83,13 +85,13 @@ void setup()
   SerialCommandHandler.AddCommand(F("SetSymTable"), Cmd_SetSymTable);
   SerialCommandHandler.AddCommand(F("SetSym"), Cmd_SetSym);
   SerialCommandHandler.AddCommand(F("SetPHG"), Cmd_SetPHG);
-
+*/
   SerialCommandHandler.AddCommand(F("SaveSet"), Cmd_SaveSet);
   SerialCommandHandler.AddCommand(F("LoadSet"), Cmd_LoadSet);
   SerialCommandHandler.AddCommand(F("ApplySet"), Cmd_ApplySet);
-  SerialCommandHandler.AddCommand(F("PrintSet"), Cmd_PrintSet);
+  SerialCommandHandler.AddCommand(F("PrintSet"), Cmd_PrintSet);/*
   SerialCommandHandler.AddCommand(F("StartupSet"), Cmd_StartupSet);
-  SerialCommandHandler.AddCommand(F("DefaultSet"), Cmd_DefaultSet);
+  SerialCommandHandler.AddCommand(F("DefaultSet"), Cmd_DefaultSet);*/
   SerialCommandHandler.AddCommand(F("Help"), Cmd_Help);
   SerialCommandHandler.SetDefaultHandler(Cmd_Unknown);
 
@@ -112,9 +114,9 @@ void setup()
 void loop()
 {
   SerialCommandHandler.Process();
-  updateStruct(&aprsSettings);
+  //updateStruct(&aprsSettings);
 }
-
+/*
 void updateStruct(struct APRS_Settings *settings)
 {
   settings->Call = tmp_Call;
@@ -136,7 +138,7 @@ void updateStruct(struct APRS_Settings *settings)
   //Serial.println(tmp_Call);
   //Serial.println(settings->Call);
   //Serial.println(aprsSettings.Call);
-}
+}*/
 
 void ApplySet()
 {
@@ -156,13 +158,12 @@ void ApplySet()
 
 void Cmd_SetCall(CommandParameter &parameters)
 {
-  const char *tmp = parameters.NextParameter();
-  strcpy(tmp_Call, tmp );
-  tmp_SSID = parameters.NextParameterAsInteger(0);
-  Serial.println(tmp);
-  Serial.println(tmp_Call);
+  char *tmp = parameters.NextParameter();
+  strlcpy(aprsSettings.Call, tmp, 6+1);
+  aprsSettings.SSID = parameters.NextParameterAsInteger(0);
 }
 
+/*
 void Cmd_SetDest(CommandParameter &parameters)
 {
   tmp_DestCall = parameters.NextParameter();
@@ -226,7 +227,7 @@ void Cmd_SetPHG(CommandParameter &parameters)
   tmp_Gain = parameters.NextParameterAsInteger();
   tmp_Directivity = parameters.NextParameterAsInteger();
 }
-
+*/
 void Cmd_SaveSet(CommandParameter &parameters)
 {
   EEPROM.put(eeAddress, aprsSettings);
@@ -250,7 +251,7 @@ void Cmd_PrintSet(CommandParameter &parameters)
 {
   APRS_printSettings();
 }
-
+/*
 void Cmd_StartupSet(CommandParameter &parameters)
 {
   char *parameter = parameters.NextParameter();
@@ -280,7 +281,7 @@ void Cmd_DefaultSet(CommandParameter &parameters)
   ApplySet();
   Serial.println(F("Loaded APRS default Settings"));
 }
-
+*/
 void Cmd_Help(CommandParameter &parameters)
 {
   Serial.println(F("Usage: $[Command]"));
