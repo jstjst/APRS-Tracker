@@ -1,12 +1,15 @@
 #include "src/LibAPRS/src/LibAPRS.h"
 #include "src/MLP/CommandHandler.h"
+#include <util/crc16.h>
 #include <EEPROM.h>
 
 #define ADC_REFERENCE REF_3V3
 #define OPEN_SQUELCH false
 
+#define CONFIG_VERSION "1"
+#define CONFIG_START 32
 #define eeAddress 0
-bool loadEEPROMSettings = false;
+bool loadEEPROMSettings = true;
 
 struct APRS_Settings {
   char Call[6+1];
@@ -25,6 +28,7 @@ struct APRS_Settings {
   int Height;
   int Gain;
   int Directivity;
+  word checksum;
 };
 
 const APRS_Settings aprsDefaultSettings = {
@@ -78,9 +82,19 @@ void setup()
 
   if(loadEEPROMSettings)
   {
-    EEPROM.get(eeAddress, aprsSettings);
+    bool Successful = LoadSet();
+    if(Successful)
+    {
+      Serial.println(F("Loaded APRS Settings from EEPROM"));
+    }
+    else
+    {
+      aprsSettings = aprsDefaultSettings;
+      Serial.println(F("No vaild APRS Settings found in EEPROM,"));
+      Serial.println(F("Loaded APRS default Settings"));
+    }
+
     ApplySet();
-    Serial.println(F("Loaded APRS Settings from EEPROM"));
   }
   else
   {
@@ -95,31 +109,28 @@ void setup()
 void loop()
 {
   SerialCommandHandler.Process();
-  //updateStruct(&aprsSettings);
 }
-/*
-void updateStruct(struct APRS_Settings *settings)
+
+bool LoadSet()
 {
-  settings->Call = tmp_Call;
-  settings->SSID = tmp_SSID;
-  settings->DestCall = tmp_DestCall;
-  settings->DestSSID = tmp_DestSSID;
-  settings->Path1Call = tmp_Path1Call;
-  settings->Path1SSID = tmp_Path1SSID;
-  settings->Path2Call = tmp_Path2Call;
-  settings->Path2SSID = tmp_Path2SSID;
-  settings->Preamble = tmp_Preamble;
-  settings->Tail = tmp_Tail;
-  settings->AltSymTable = tmp_AltSymTable;
-  settings->Sym = tmp_Sym;
-  settings->Power = tmp_Power;
-  settings->Height = tmp_Height;
-  settings->Gain = tmp_Gain;
-  settings->Directivity = tmp_Directivity;
-  //Serial.println(tmp_Call);
-  //Serial.println(settings->Call);
-  //Serial.println(aprsSettings.Call);
-}*/
+  word EEPROMchecksum = 0xFFFF;
+
+  EEPROM.get(eeAddress, aprsSettings);
+
+  for(int i=0; i<sizeof(aprsSettings)-sizeof(aprsSettings.checksum); i++)
+  {
+    EEPROMchecksum = _crc16_update(EEPROMchecksum, *((byte*)&aprsSettings + i));
+  }
+
+  if(aprsSettings.checksum == EEPROMchecksum)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 
 void ApplySet()
 {
@@ -213,15 +224,32 @@ void Cmd_SetPHG(CommandParameter &parameters)
 
 void Cmd_SaveSet(CommandParameter &parameters)
 {
+  aprsSettings.checksum = 0xFFFF;
+
+  for(int i=0; i<sizeof(aprsSettings)-sizeof(aprsSettings.checksum); i++)
+  {
+    aprsSettings.checksum = _crc16_update(aprsSettings.checksum, *((byte*)&aprsSettings + i));
+  }
   EEPROM.put(eeAddress, aprsSettings);
+
   Serial.println(F("Saved APRS Settings to EEPROM"));
 }
 
 void Cmd_LoadSet(CommandParameter &parameters)
 {
-  EEPROM.get(eeAddress, aprsSettings);
+  bool Successful = LoadSet();
+  if(Successful)
+  {
+    Serial.println(F("Loaded APRS Settings from EEPROM"));
+  }
+  else
+  {
+    aprsSettings = aprsDefaultSettings;
+    Serial.println(F("No vaild APRS Settings found in EEPROM,"));
+    Serial.println(F("Loaded APRS default Settings"));
+  }
+
   ApplySet();
-  Serial.println(F("Loaded APRS Settings from EEPROM"));
 }
 
 void Cmd_ApplySet(CommandParameter &parameters)
