@@ -4,9 +4,9 @@
 [submodule "library/LibAPRS"]
 	path = library/LibAPRS
 	url = https://github.com/markqvist/LibAPRS
-[submodule "library/TinyGPS"]
-	path = library/TinyGPS
-	url = https://github.com/mikalhart/TinyGPS
 [submodule "library/MLP"]
 	path = library/MLP
 	url = https://github.com/Megunolink/MLP
+[submodule "TinyGPS"]
+	path = TinyGPS
+	url = https://github.com/jstjst/TinyGPS
