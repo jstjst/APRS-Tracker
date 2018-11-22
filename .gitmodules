@@ -1,6 +1,6 @@
 [submodule "library/LibAPRS"]
 	path = library/LibAPRS
-	url = https://github.com/markqvist/LibAPRS
+	url = https://github.com/jstjst/LibAPRS
 [submodule "library/MLP"]
 	path = library/MLP
 	url = https://github.com/Megunolink/MLP
