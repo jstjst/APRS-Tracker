@@ -1,17 +1,15 @@
+
+
 //---------- APRS
 #include "src/LibAPRS/src/LibAPRS.h"
 #define ADC_REFERENCE REF_3V3
 #define OPEN_SQUELCH false
 #define UpdateTime 30000
 
-//---------- Software Serial
-#include <SoftwareSerial.h>
-SoftwareSerial CommandSerial(12, 11); // RX, TX
-
 //---------- Command Handler
 #include "src/MLP/CommandHandler.h"
 #define CommandBaud 9600
-CommandHandler<16, 20, 4> SerialCommandHandler(CommandSerial, '$', '\n');
+CommandHandler<16, 20, 4> SerialCommandHandler(Serial1, '$', '\n');
 
 //---------- Settings
 #include <util/crc16.h>
@@ -79,7 +77,7 @@ void setup()
 
 void Commands_Init()
 {
-  CommandSerial.begin(CommandBaud);
+  Serial1.begin(CommandBaud);
 
   SerialCommandHandler.AddCommand(F("SetCall"), Cmd_SetCall);
   SerialCommandHandler.AddCommand(F("SetDest"), Cmd_SetDest);
@@ -118,21 +116,21 @@ void loop()
       unsigned long age;
 
       Gps.get_raw_position(clat, clon, &age);
-      CommandSerial.print(F("Free RAM:     ")); CommandSerial.println(freeMemory());
+      Serial1.print(F("Free RAM:     ")); Serial1.println(freeMemory());
 
       APRS_setLat(clat);
       APRS_setLon(clon);
       char *comment = "LibAPRS Tracker Test";
       APRS_sendLoc(comment, strlen(comment));
 
-      CommandSerial.println(F("APRS: Sent positon package"));
+      Serial1.println(F("APRS: Sent positon package"));
     }
     else
     {
-      CommandSerial.print(F("APRS: No new GPS Data recevied within "));
-      CommandSerial.print(UpdateTime);
-      CommandSerial.println(F("s"));
-      CommandSerial.println(F("APRS: No positon package sent"));
+      Serial1.print(F("APRS: No new GPS Data recevied within "));
+      Serial1.print(UpdateTime);
+      Serial1.println(F("s"));
+      Serial1.println(F("APRS: No positon package sent"));
     }
   }
 
@@ -158,13 +156,13 @@ void LoadStartupSet()
     bool Successful = LoadSet();
     if(Successful)
     {
-      CommandSerial.println(F("Loaded APRS Settings from EEPROM"));
+      Serial1.println(F("Loaded APRS Settings from EEPROM"));
     }
     else
     {
       aprsSettings = aprsDefaultSettings;
-      CommandSerial.println(F("No vaild APRS Settings found in EEPROM,"));
-      CommandSerial.println(F("Loaded APRS default Settings"));
+      Serial1.println(F("No vaild APRS Settings found in EEPROM,"));
+      Serial1.println(F("Loaded APRS default Settings"));
     }
 
     ApplySet();
@@ -173,7 +171,7 @@ void LoadStartupSet()
   {
     aprsSettings = aprsDefaultSettings;
     ApplySet();
-    CommandSerial.println(F("Loaded APRS default Settings"));
+    Serial1.println(F("Loaded APRS default Settings"));
   }
 }
 
@@ -268,12 +266,12 @@ void Cmd_SetSymTable(CommandParameter &parameters)
   }
   else
   {
-    CommandSerial.print(F("SetSymTable: invalid argument"));
-    CommandSerial.println(tmp);
-    CommandSerial.println(F("Valid arguments are:"));
-    CommandSerial.println(F("  - 'Normal'"));
-    CommandSerial.println(F("  - 'Alternate'"));
-    CommandSerial.println(F("Try '$Help' for more information."));
+    Serial1.print(F("SetSymTable: invalid argument"));
+    Serial1.println(tmp);
+    Serial1.println(F("Valid arguments are:"));
+    Serial1.println(F("  - 'Normal'"));
+    Serial1.println(F("  - 'Alternate'"));
+    Serial1.println(F("Try '$Help' for more information."));
   }
 }
 
@@ -300,7 +298,7 @@ void Cmd_SaveSet(CommandParameter &parameters)
   }
   EEPROM.put(eeAddress, aprsSettings);
 
-  CommandSerial.println(F("Saved APRS Settings to EEPROM"));
+  Serial1.println(F("Saved APRS Settings to EEPROM"));
 }
 
 void Cmd_LoadSet(CommandParameter &parameters)
@@ -308,13 +306,13 @@ void Cmd_LoadSet(CommandParameter &parameters)
   bool Successful = LoadSet();
   if(Successful)
   {
-    CommandSerial.println(F("Loaded APRS Settings from EEPROM"));
+    Serial1.println(F("Loaded APRS Settings from EEPROM"));
   }
   else
   {
     aprsSettings = aprsDefaultSettings;
-    CommandSerial.println(F("No vaild APRS Settings found in EEPROM,"));
-    CommandSerial.println(F("Loaded APRS default Settings"));
+    Serial1.println(F("No vaild APRS Settings found in EEPROM,"));
+    Serial1.println(F("Loaded APRS default Settings"));
   }
 
   ApplySet();
@@ -323,12 +321,12 @@ void Cmd_LoadSet(CommandParameter &parameters)
 void Cmd_ApplySet(CommandParameter &parameters)
 {
   ApplySet();
-  CommandSerial.println(F("Applied current APRS Settings"));
+  Serial1.println(F("Applied current APRS Settings"));
 }
 
 void Cmd_PrintSet(CommandParameter &parameters)
 {
-  APRS_printSettings(CommandSerial);
+  APRS_printSettings(Serial1);
 }
 
 void Cmd_StartupSet(CommandParameter &parameters)
@@ -345,12 +343,12 @@ void Cmd_StartupSet(CommandParameter &parameters)
   }
   else
   {
-    CommandSerial.print(F("StartupSet: invalid argument"));
-    CommandSerial.println(tmp);
-    CommandSerial.println(F("Valid arguments are:"));
-    CommandSerial.println(F("  - 'EEPROM'"));
-    CommandSerial.println(F("  - 'Default'"));
-    CommandSerial.println(F("Try '$Help' for more information."));
+    Serial1.print(F("StartupSet: invalid argument"));
+    Serial1.println(tmp);
+    Serial1.println(F("Valid arguments are:"));
+    Serial1.println(F("  - 'EEPROM'"));
+    Serial1.println(F("  - 'Default'"));
+    Serial1.println(F("Try '$Help' for more information."));
   }
 }
 
@@ -358,36 +356,36 @@ void Cmd_DefaultSet(CommandParameter &parameters)
 {
   aprsSettings = aprsDefaultSettings;
   ApplySet();
-  CommandSerial.println(F("Loaded APRS default Settings"));
+  Serial1.println(F("Loaded APRS default Settings"));
 }
 
 void Cmd_Help(CommandParameter &parameters)
 {
-  CommandSerial.println(F("Usage: $[Command]"));
-  CommandSerial.println(F("Commands:"));
-  CommandSerial.println(F("  SetCall [Callsign] [SSID]                           set your callsign and SSID"));
-  CommandSerial.println(F("  SetDest [Callsign] [SSID]                           set the destination callsign and SSID"));
-  CommandSerial.println(F("  SetPath1 [Callsign] [SSID]                          set the path 1 callsign and SSID"));
-  CommandSerial.println(F("  SetPath2 [Callsign] [SSID]                          set the path 2 callsign and SSID"));
-  CommandSerial.println(F("  SetPreamble [Preamble]                              set the TX preamble"));
-  CommandSerial.println(F("  SetTail [Tail]                                      set the TX tail"));
-  CommandSerial.println(F("  SetSymTable ['Normal', 'Alternate']                 choose between 'Normal' or 'Alternate' symbol table"));
-  CommandSerial.println(F("  SetSym [Symbol]                                     set your symbol"));
-  CommandSerial.println(F("  SetPHG [Power] [Height] [Gain] [Directivity]        set the power/height/gain/directivity information of your station"));
-  CommandSerial.println(F("  SaveSet                                             save the current APRS settings to the EEPROM"));
-  CommandSerial.println(F("  LoadSet                                             load and apply the settings saved in the EEPROM"));
-  CommandSerial.println(F("  ApplySet                                            apply the current APRS settings to LibAPRS"));
-  CommandSerial.println(F("  PrintSet                                            print the current APRS settings"));
-  CommandSerial.println(F("  StartupSet ['Default', 'EEPROM']                    choose whether 'Default' or 'EEPROM' settings are loaded and applied at startup"));
-  CommandSerial.println(F("                                                      default is 'EEPROM'"));
-  CommandSerial.println(F("  DefaultSet                                          load and apply the default APRS settings"));
-  CommandSerial.println(F("  Help                                                display this help"));
-  CommandSerial.println();
-  CommandSerial.println(F("APRS-Tracker version 0.0, URL: <https://github.com/jstjst/APRS-Tracker>"));
+  Serial1.println(F("Usage: $[Command]"));
+  Serial1.println(F("Commands:"));
+  Serial1.println(F("  SetCall [Callsign] [SSID]                           set your callsign and SSID"));
+  Serial1.println(F("  SetDest [Callsign] [SSID]                           set the destination callsign and SSID"));
+  Serial1.println(F("  SetPath1 [Callsign] [SSID]                          set the path 1 callsign and SSID"));
+  Serial1.println(F("  SetPath2 [Callsign] [SSID]                          set the path 2 callsign and SSID"));
+  Serial1.println(F("  SetPreamble [Preamble]                              set the TX preamble"));
+  Serial1.println(F("  SetTail [Tail]                                      set the TX tail"));
+  Serial1.println(F("  SetSymTable ['Normal', 'Alternate']                 choose between 'Normal' or 'Alternate' symbol table"));
+  Serial1.println(F("  SetSym [Symbol]                                     set your symbol"));
+  Serial1.println(F("  SetPHG [Power] [Height] [Gain] [Directivity]        set the power/height/gain/directivity information of your station"));
+  Serial1.println(F("  SaveSet                                             save the current APRS settings to the EEPROM"));
+  Serial1.println(F("  LoadSet                                             load and apply the settings saved in the EEPROM"));
+  Serial1.println(F("  ApplySet                                            apply the current APRS settings to LibAPRS"));
+  Serial1.println(F("  PrintSet                                            print the current APRS settings"));
+  Serial1.println(F("  StartupSet ['Default', 'EEPROM']                    choose whether 'Default' or 'EEPROM' settings are loaded and applied at startup"));
+  Serial1.println(F("                                                      default is 'EEPROM'"));
+  Serial1.println(F("  DefaultSet                                          load and apply the default APRS settings"));
+  Serial1.println(F("  Help                                                display this help"));
+  Serial1.println();
+  Serial1.println(F("APRS-Tracker version 0.0, URL: <https://github.com/jstjst/APRS-Tracker>"));
 }
 
 void Cmd_Unknown()
 {
-  CommandSerial.println(F("command not found"));
-  CommandSerial.println(F("Try '$Help' for more information"));
+  Serial1.println(F("command not found"));
+  Serial1.println(F("Try '$Help' for more information"));
 }
