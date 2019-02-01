@@ -118,6 +118,9 @@ void loop()
       Gps.get_raw_position(clat, clon, &age);
       Serial1.print(F("Free RAM:     ")); Serial1.println(freeMemory());
 
+      Serial1.println(clat);
+      Serial1.println(clon);
+
       APRS_setLat(clat);
       APRS_setLon(clon);
       char *comment = "LibAPRS Tracker Test";
@@ -277,7 +280,7 @@ void Cmd_SetSymTable(CommandParameter &parameters)
 
 void Cmd_SetSym(CommandParameter &parameters)
 {
-  aprsSettings.Sym = parameters.NextParameter();   //or use also strlcpy???
+  //aprsSettings.Sym = parameters.NextParameter();   //or use also strlcpy???
 }
 
 void Cmd_SetPHG(CommandParameter &parameters)
