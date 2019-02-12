@@ -112,7 +112,7 @@ void loop()
     {
       newPos = false;
 
-      char clat[15], clon[15];
+      char clat[9], clon[10];
       unsigned long age;
 
       Gps.get_raw_position(clat, clon, &age);
